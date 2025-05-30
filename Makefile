@@ -13,7 +13,9 @@ SRC		=	src/Main.cpp \
 			src/KitchenWrapper.cpp \
 			src/AFileLogger.cpp \
 			src/AConsoleLogger.cpp \
-			src/ADefaultLogger.cpp
+			src/ADefaultLogger.cpp \
+			src/IPC.cpp \
+			src/KitchenProces.cpp \
 
 OBJ		=	$(SRC:.cpp=.o)
 

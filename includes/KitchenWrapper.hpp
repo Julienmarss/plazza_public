@@ -8,15 +8,17 @@
 #ifndef KITCHENWRAPPER_HPP_
 #define KITCHENWRAPPER_HPP_
 
+#include "KitchenProcess.hpp"
 #include "Kitchen.hpp"
 #include "ILogger.hpp"
 #include <memory>
+#include <sys/types.h>
 
 namespace Plazza {
     class KitchenWrapper {
         public:
-            KitchenWrapper(int cooks, float multiplier, int refillTime, ILogger &logger);
-            ~KitchenWrapper() = default;
+            KitchenWrapper(int kitchen_id, int cooks, float multiplier, int refillTime, ILogger &logger);
+            ~KitchenWrapper();
             KitchenWrapper(const KitchenWrapper&) = delete;
             KitchenWrapper& operator=(const KitchenWrapper&) = delete;
             KitchenWrapper(KitchenWrapper&&) = default;
@@ -26,8 +28,14 @@ namespace Plazza {
             size_t getQueueSize() const;
             void printStatus() const;
             bool isRunning() const;
+            pid_t getPid() const;
+            void processMessages();
         private:
-            std::unique_ptr<Kitchen> _kitchen;
+            int _kitchen_id;
+            ILogger &_logger;
+            std::unique_ptr<KitchenProcess> _process;
+            mutable size_t _estimated_queue_size;
+            mutable int _max_queue_size;
     };
 }
 

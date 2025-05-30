@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2025
 ** B-CCP-400-LIL-4-1-theplazza-martin.delebecque
 ** File description:
-** Kitchen
+** Kitchen.hpp - Modified with callback support
 */
 
 #ifndef KITCHEN_HPP_
@@ -18,12 +18,15 @@
 #include <chrono>
 #include <unordered_map>
 #include <string>
+#include <functional>
 #include "ILogger.hpp"
 
 namespace Plazza {
     class Kitchen {
         public:
+            using PizzaReadyCallback = std::function<void(const std::string&)>;
             Kitchen(int cooks, float multiplier, int refillTime, ILogger &logger);
+            Kitchen(int cooks, float multiplier, int refillTime, ILogger &logger, PizzaReadyCallback callback);
             ~Kitchen();
             bool canAcceptMore() const;
             bool pushOrder(const Plazza::PizzaOrder& order);
@@ -39,6 +42,7 @@ namespace Plazza {
             float _multiplier;
             int _refillTime;
             ILogger &_logger;
+            PizzaReadyCallback _pizzaReadyCallback;
             size_t _maxQueue;
             std::queue<Plazza::PizzaOrder> _orders;
             std::vector<std::thread> _threads;

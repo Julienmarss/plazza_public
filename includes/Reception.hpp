@@ -28,6 +28,7 @@ namespace Plazza {
         int _cooks;
         int _refillTime;
         ILogger &_logger;
+        int _kitchen_counter;
         struct KitchenSim {
             std::vector<PizzaOrder> queue;
             size_t maxQueue;
@@ -38,6 +39,7 @@ namespace Plazza {
         void printStatus();
         void createKitchen();
         void cleanupClosedKitchens();
+        void processAllMessages();
     };
 }
 

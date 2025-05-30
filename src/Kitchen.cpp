@@ -1,3 +1,10 @@
+/*
+** EPITECH PROJECT, 2025
+** B-CCP-400-LIL-4-1-theplazza-martin.delebecque
+** File description:
+** Kitchen.cpp
+*/
+
 #include "../includes/Kitchen.hpp"
 #include "../includes/ILogger.hpp"
 #include <iostream>
@@ -13,8 +20,11 @@ static const std::map<Plazza::PizzaType, std::vector<std::string>> PIZZA_INGREDI
 };
 
 Plazza::Kitchen::Kitchen(int cooks, float multiplier, int refillTime, ILogger &logger)
+    : Kitchen(cooks, multiplier, refillTime, logger, nullptr) {}
+
+Plazza::Kitchen::Kitchen(int cooks, float multiplier, int refillTime, ILogger &logger, PizzaReadyCallback callback)
     : _cooks(cooks), _multiplier(multiplier), _refillTime(refillTime), _logger(logger),
-      _maxQueue(cooks * 2), _running(true)
+      _pizzaReadyCallback(callback), _maxQueue(cooks * 2), _running(true)
 {
     _ingredients = {
         {"dough", 5}, {"tomato", 5}, {"gruyere", 5}, 
@@ -116,11 +126,12 @@ void Plazza::Kitchen::printStatus() const
         cooksStatus += "C" + std::to_string(i) + "(" + (_cookStatus[i] ? "busy" : "idle") + ") ";
     }
     _logger.logInfo(cooksStatus);
-    std::string ingredientsStatus;
+    
+    std::string ingredientsStatus = "Ingredients: ";
     for (const auto& [ingredient, count] : _ingredients) {
         ingredientsStatus += ingredient + ":" + std::to_string(count) + " ";
     }
-    _logger.logInfo("Ingredients: " + ingredientsStatus);
+    _logger.logInfo(ingredientsStatus);
 }
 
 void Plazza::Kitchen::cookLoop(int id)
@@ -175,6 +186,8 @@ void Plazza::Kitchen::cookLoop(int id)
         if (hasTask) {
             int cookTime = 0;
             std::string pizzaName;
+            std::string sizeStr;
+
             switch (task.type) {
                 case Plazza::PizzaType::Margarita: 
                     cookTime = 1; 
@@ -197,6 +210,15 @@ void Plazza::Kitchen::cookLoop(int id)
                     pizzaName = "Unknown";
                     break;
             }
+            
+            switch (task.size) {
+                case Plazza::PizzaSize::S: sizeStr = "S"; break;
+                case Plazza::PizzaSize::M: sizeStr = "M"; break;
+                case Plazza::PizzaSize::L: sizeStr = "L"; break;
+                case Plazza::PizzaSize::XL: sizeStr = "XL"; break;
+                case Plazza::PizzaSize::XXL: sizeStr = "XXL"; break;
+                default: sizeStr = "Unknown"; break;
+            }
 
             int ms = static_cast<int>(cookTime * _multiplier * 1000);
             std::this_thread::sleep_for(std::chrono::milliseconds(ms));
@@ -206,7 +228,13 @@ void Plazza::Kitchen::cookLoop(int id)
                 _cookStatus[id] = false;
                 _lastActive = std::chrono::steady_clock::now();
             }
-            _logger.logInfo("[Cook " + std::to_string(id) + "] pizza ready: " + pizzaName + " in " + std::to_string(ms) + "s");
+            
+            std::string pizzaInfo = pizzaName + " " + sizeStr + " (Cook " + std::to_string(id) + ", " + std::to_string(ms) + "ms)";
+            _logger.logInfo("Pizza ready: " + pizzaInfo);
+            
+            if (_pizzaReadyCallback) {
+                _pizzaReadyCallback(pizzaInfo);
+            }
         }
     }
 }
@@ -241,7 +269,7 @@ void Plazza::Kitchen::ingredientRefillLoop()
                 }
                 
                 if (hasOrders || hasBusyCooks) {
-                    _logger.logInfo("[Kitchen] Ingredients refilled.");
+                    _logger.logInfo("Ingredients refilled");
                 }
                 
                 lastRefill = now;

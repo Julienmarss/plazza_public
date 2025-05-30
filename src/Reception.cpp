@@ -27,6 +27,7 @@ void Plazza::Reception::run()
     _logger.logInfo("  - Check status: 'status'");
     _logger.logInfo("  - Exit: 'exit'");
     while (true) {
+        processAllMessages();
         std::cout << "> ";
         std::getline(std::cin, input);
         if (input == "exit" || std::cin.eof()) {
@@ -59,6 +60,15 @@ void Plazza::Reception::run()
     }
 }
 
+void Plazza::Reception::processAllMessages()
+{
+    for (auto& kitchen : _kitchens) {
+        if (kitchen && kitchen->isRunning()) {
+            kitchen->processMessages();
+        }
+    }
+}
+
 void Plazza::Reception::cleanupClosedKitchens()
 {
     _kitchens.erase(
@@ -75,22 +85,31 @@ void Plazza::Reception::handleOrder(const PizzaOrder& order)
     cleanupClosedKitchens();
     for (int i = 0; i < order.quantity; ++i) {
         bool assigned = false;
-        for (auto& kitchen : _kitchens) {
-            if (kitchen->canAcceptMore()) {
-                if (kitchen->sendOrder({order.type, order.size, 1})) {
+        
+        if (!_kitchens.empty()) {
+            auto best_kitchen = std::min_element(_kitchens.begin(), _kitchens.end(),
+                [](const std::unique_ptr<KitchenWrapper>& a, const std::unique_ptr<KitchenWrapper>& b) {
+                    if (!a->isRunning()) return false;
+                    if (!b->isRunning()) return true;
+                    return a->getQueueSize() < b->getQueueSize();
+                });
+            
+            if (best_kitchen != _kitchens.end() && (*best_kitchen)->isRunning() && (*best_kitchen)->canAcceptMore()) {
+                if ((*best_kitchen)->sendOrder({order.type, order.size, 1})) {
                     assigned = true;
-                    break;
                 }
             }
         }
         if (!assigned) {
             createKitchen();
-            if (!_kitchens.back()->sendOrder({order.type, order.size, 1})) {
-                _logger.logError("[ERROR] Failed to assign pizza to new kitchen");
+            if (!_kitchens.empty() && _kitchens.back()->sendOrder({order.type, order.size, 1})) {
+                assigned = true;
+            } else {
+                _logger.logError("Failed to assign pizza to new kitchen");
             }
         }
     }
-    _logger.logInfo("Order received: " + std::to_string(order.quantity) + " pizza(s)");
+    _logger.logInfo("Order processed: " + std::to_string(order.quantity) + " pizza(s) distributed");
 }
 
 void Plazza::Reception::createKitchen()
