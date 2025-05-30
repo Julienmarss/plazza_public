@@ -151,7 +151,7 @@ void Plazza::Kitchen::cookLoop(int id)
                     auto now = std::chrono::steady_clock::now();
                     auto inactiveDuration = std::chrono::duration_cast<std::chrono::seconds>(now - _lastActive);
                     if (inactiveDuration.count() >= 5) {
-                        _logger.logInfo("[Kitchen] No activity for 5s, shutting down.");
+                        _logger.logInfo("[Kitchen" + std::to_string(id) +"] No activity for 5s, shutting down.");
                         _running = false;
                         _cv.notify_all();
                         return;
@@ -173,7 +173,6 @@ void Plazza::Kitchen::cookLoop(int id)
         }
 
         if (hasTask) {
-            // Calculate cooking time
             int cookTime = 0;
             std::string pizzaName;
             switch (task.type) {

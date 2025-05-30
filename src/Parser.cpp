@@ -43,10 +43,10 @@ Plazza::PlazzaArguments Plazza::Parser::parseArgument(int ac, char **av) {
         } else if (loggerTypeStr == "file") {
             args.loggerType = Plazza::LoggerType::File;
         } else {
-            throw Plazza::Parser::ParserException("Invalid logger type argument, must be 'console' or 'file'");
+            throw Plazza::Parser::ParserException("Invalid logger type argument, must be 'console' or 'file' or 'default'");
         }
     } else {
-        args.loggerType = Plazza::LoggerType::Console;
+        args.loggerType = Plazza::LoggerType::Default;
     }
     return args;
 }
@@ -67,12 +67,13 @@ std::vector<Plazza::PizzaOrder> Plazza::Parser::parse(const std::string& str) {
     std::vector<Plazza::PizzaOrder> orders;
     std::istringstream stream(str);
     std::string line;
-    while (std::getline(stream, line)) {
+    while (std::getline(stream, line, ';')) {
         if (line.empty()) continue;
         Plazza::PizzaOrder order = parseOrder(line);
-        if (order.type != Plazza::PizzaType::Unknown && order.size != Plazza::PizzaSize::Unknown && order.quantity > 0) {
-            orders.push_back(order);
+        if (order.type == Plazza::PizzaType::Unknown || order.size == Plazza::PizzaSize::Unknown || order.quantity <= 0) {
+            throw Plazza::Parser::ParserException("Invalid order format: " + line);
         }
+        orders.push_back(order);
     }
     return orders;
 }

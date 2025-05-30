@@ -10,10 +10,10 @@
 #include <iostream>
 #include "../includes/AFileLogger.hpp"
 #include "../includes/AConsoleLogger.hpp"
+#include "../includes/ADefaultLogger.hpp"
 
 int main(int ac, char** av)
 {
-
     try {
         try {
             Plazza::Parser parser;
@@ -26,6 +26,13 @@ int main(int ac, char** av)
                 Plazza::AFileLogger logger("plazza.log");
                 Plazza::Reception reception(args.cookingTime, args.maxCooks, args.timeToWait, logger);
                 reception.run();
+            } else if (args.loggerType == Plazza::LoggerType::Default) {
+                Plazza::ADefaultLogger logger;
+                Plazza::Reception reception(args.cookingTime, args.maxCooks, args.timeToWait, logger);
+                reception.run();
+            } else {
+                std::cerr << "Unknown logger type." << std::endl;
+                return 84;
             }
             } catch (const Plazza::ILogger::LoggerException& e) {
                 std::cerr << "Logger error: " << e.what() << std::endl;

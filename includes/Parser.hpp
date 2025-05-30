@@ -12,7 +12,8 @@ namespace Plazza
 {
     enum LoggerType {
         Console,
-        File
+        File,
+        Default
     };
     struct PlazzaArguments {
 

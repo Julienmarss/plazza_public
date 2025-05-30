@@ -8,10 +8,9 @@
 #include "AFileLogger.hpp"
 
 #include <fstream>
-
 Plazza::AFileLogger::AFileLogger(const std::string& filename) {
     _filename = filename;
-    std::ofstream file(_filename, std::ios::app);
+    std::ofstream file(_filename, std::ios::trunc);
     if (!file.is_open()) {
         throw LoggerException("Failed to open log file: " + _filename);
     }

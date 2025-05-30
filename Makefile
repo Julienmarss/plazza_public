@@ -13,6 +13,7 @@ SRC		=	src/Main.cpp \
 			src/KitchenWrapper.cpp \
 			src/AFileLogger.cpp \
 			src/AConsoleLogger.cpp \
+			src/ADefaultLogger.cpp
 
 OBJ		=	$(SRC:.cpp=.o)
 
